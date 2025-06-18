@@ -1,0 +1,21 @@
+
+{% load static %}
+
+
+<div class="site-section">
+  <div class="container-new-product">
+  <p class="text-center">New Products</p>
+    <div class="products-grid ">
+      {% for product in new_items %}
+      <div class="product-card" style="  text-align: center;">
+          <a href="{{ product.get_absolute_url }}"><img src="{{ product.image.url }}" class="img-fluid custom-fit"></a>
+          <a href="{{ product.get_absolute_url }}" class="product-name no-underline">
+              <p>{{ product.title }}</p>
+          </a>
+          <p>{{ product.description}}</p>
+          
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>  

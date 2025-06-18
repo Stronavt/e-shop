@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load rubles_format %}
+{% block content %}
+
+
+
+<div class='container'>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-success" role="alert" id="alertSuccess" style="display: none;">
+                Your payment was successful.
+            </div>
+            <div class="alert alert-danger" role="alert" id="alertFailure" style="display: none;">
+                Your payment failed. Please try again.
+            </div>
+
+            <div class="text-center py-3">
+                <div id="loader" class="lds-ring" style="margin: auto; display: none;">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+
+            <div id='paymentInfo'>
+                <p>Order total: {{ order.get_total_order_price|rubles_format }} ₽ </p>
+                <h4>Select a payment method</h4>
+
+<!-- ссылка на payment_strip -->
+                <div>
+                    <a href="{% url 'cart:payment-stripe' %}" class="btn btn-primary btn-block mb-5">Stripe</a>
+                </div>
+                <div>
+                    <a href="#" class="btn btn-primary btn-block mb-5">T-Bank</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

@@ -1,0 +1,198 @@
+body {
+    font-family: "Roboto Slab", Georgia, "Times New Roman", Times, serif;
+    font-size:15px;
+    line-height:1.5
+}
+html{overflow-x:hidden}
+
+
+/*nav {
+    display: flex;
+    height: 80px;
+    color: green;
+    font-weight: 400;
+    line-height: 1.5;
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+
+.navbar-brand {
+    font-size: 24px;
+    padding: 30px; 
+    align-items: center; 
+    height: 100%;
+    margin-left: 20px;
+}*/
+
+nav {
+  display: flex;
+  height: 80px;
+  color: green;
+  font-weight: 400;
+  line-height: 1.5;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+/*.navbar-brand {
+  font-size: 24px;
+  padding: 30px; 
+  align-items: center; 
+  height: 100%;
+  margin-left: 20px;
+}*/
+.navbar-brand {
+  height: 56px; /* стандартная высота navbar в Bootstrap 4 */
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.navbar-collapse {
+  transition: height 0.1s ease-in-out;
+}
+
+
+
+.navbar-collapse.show {
+  display: block;
+  position: absolute;
+  top: 80px;
+  left: 0;
+  padding-left: 16px;
+  width: 100%;
+  background-color: #fff;
+  z-index: 1050;
+  /*box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);*/
+}
+
+
+.nav-link {
+    margin-right: 25px;
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.no-underline {
+  text-decoration: none;
+}
+
+a, p {
+
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  color:black;
+}
+
+a:hover {
+  color:grey;
+  text-decoration: none;
+
+}
+
+.btn.default-dutton {
+  background-color: grey;
+}
+
+
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 равные колонки */
+  gap: 60px; /* отступы между карточками */
+  max-width: 900px;
+  margin: 0 auto; /* центрируем блок */
+  margin-top: 50px;
+  margin-bottom: 50px;
+}
+
+.product-card {
+  width: 220px;              /* задаём фиксированную ширину карточки */
+  padding: 15px;             /* отступы внутри карточки */
+  border: 1px solid black; /* меняем толщину и цвет границы */
+  border-radius: 25px;        /* скругление углов */
+  box-sizing: border-box;    /* учитываем padding и border в ширине */
+  display: flex;
+  flex-direction: column;    /* чтобы содержимое шло вертикально */
+  align-items: center;
+  margin: 10px;   
+}
+
+.product-photo {
+  width: 100%;
+  max-width: 200px; /* ограничиваем размер фото */
+  height: auto;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+.product-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 1.1em;
+}
+.product-price {
+  color: #27a844;
+  font-weight: 700;
+  font-size: 1em;
+}
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    /* Опционально для сохранения пропорций */
+    object-fit: contain; /* или cover */
+  }
+  .fullscreen-img {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;  /* масштабировать и обрезать по краям, чтобы заполнить */
+    object-position: center center; /* позиционирование */
+    display: block; /* убрать отступы вокруг */
+  }
+
+  .site-section {
+    margin: 100px 0;
+  }
+
+  .img-fluid.custom-fit {
+    width: 100%;           /* Заполнить ширину родительского контейнера */
+    height: 250px;         /* Фиксированная высота для единообразия карточек */
+    object-fit: contain;     /* Обрезать изображение, сохраняя пропорции и центрируя */
+    object-position: center;
+    display: block;        /* Убирает отступы снизу */
+    border-radius: 8px;    /* Опционально, чтобы картинка выглядела аккуратно */
+  }
+  
+
+.pagination {
+  margin: 40px;
+  justify-content: center;
+
+}
+
+
+.table-cart th {
+  width: 130px;
+  text-align: center;
+}
+
+.form-product-detail {
+  width: 20%;
+
+}
+
+#id_start_date {
+  margin-left: -1000px;
+}
+
+.products-grid{
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  padding: 16px;
+}
+
+.product-card {
+  background-color: #f0f0f0;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+

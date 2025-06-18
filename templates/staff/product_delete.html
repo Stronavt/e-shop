@@ -1,0 +1,21 @@
+
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="site-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <form method="POST" style="max-width: 400px; margin: 0 auto;">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <p>confirm the removal of the product</p>
+                    <button type='submit' class='btn btn-secondary' >Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

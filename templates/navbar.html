@@ -1,0 +1,70 @@
+
+{% load static %}
+{% load cart_template_tags %}
+
+<nav class="navbar navbar-expand-md navbar-light bg-light ">
+    <div class="container-brand">
+        <a class="navbar-brand" href="/">BEAST</a>
+    </div>
+    <!--кнопка для навигационного меню с маленьким экраном-->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+  
+    
+
+    <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent" style="width: 100%">
+        <ul class="navbar-nav ">
+            <li class="nav-item ">
+                <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'cart:product-list' %}">Shop</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="/contact">Contact</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" style='color:red' href="#">Sale</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="#">Journal</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+            </li>
+
+            {% if request.user.is_staff %}
+            <li class="nav-item">
+                <a class='nav-link' href="{% url 'staff:staff_page' %}">Staff</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    <div class="collapse navbar-collapse justify-content-end" style="width: 15%">
+        <ul class="navbar-nav ">
+            <li class="nav-item ">
+                <a href="{% url 'cart:cart_page' %}" class="nav-link">
+
+                    <img src="/media/icons/корзина.png" alt="Корзина" class="icon">
+                    {{ request|cart_items_count }}
+                </a>
+            </li>   
+            
+            {% if user.is_authenticated %}
+            <li class="nav-item mr-auto">
+                <a class='nav-link' href="{% url 'account_logout' %}">Logout</a>
+            </li>
+            {% else %}
+            <li class="nav-item mr-auto">
+                <a class='nav-link' href="{% url 'account_login' %}">Login</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+
+</nav>    
+
+
+

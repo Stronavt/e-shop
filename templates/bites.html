@@ -1,0 +1,188 @@
+<nav class="site-navigation text-right text-md-center" role="navigation">
+    <div class="container">
+        <ul class="site-menu js-clone-nav d-none d-md-block" style="padding: 0;">
+            <li><a href="/">Home</a></li>
+            <li><a href="{% url 'cart:product-list' %}">Shop</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {% if request.user.is_staff %}
+                <li><a href="{% url 'staff:staff_page' %}">Staff</a></li>
+            {% endif %}
+            <li>
+                <a href="{% url 'cart:cart_page' %}" class="site-cart">
+                    <span><i class="fas fa-shopping-cart"></i></span>
+                    <span class="count">{{ request|cart_items_count }}</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+{% load  static %}
+
+<nav class="navbar navbar-expand-sm navbar-light bg-light shadow">
+ <a class="navbar-brand" href="/">
+    Beast
+ </a>
+ <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+   <span class="navbar-toggler-icon"></span>
+ </button>
+ <div class="collapse navbar-collapse" id="navbarText">
+   <ul class="navbar-nav mr-auto">
+     <li class="nav-item">
+       <a class="nav-link" href="/">Home</a>
+     </li>
+     <li class="nav-item">
+       <a class="nav-link" href="{% url 'cart:product-list' %}">Shop</a>
+     </li>
+     <li class="nav-item">
+       <a class="nav-link" href="/contact">Contact</a>
+     </li>
+   </ul>
+   {% if request.user.is_staff %}
+                <li><a href="{% url 'staff:staff_page' %}">Staff</a></li>
+    {% endif %}
+ </div>
+</nav>
+
+
+
+
+
+        
+{% include 'navbar.html' %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <span class="alert-inner--icon"><i class="ni ni-like-2"></i></span>
+            <span class="alert-inner--text">{{ message }}</span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+
+    {% block content %}
+    {% endblock content %}
+
+    {% include 'footer.html' %}
+
+
+
+    cart/views 
+
+    def get_context_data(self, **kwargs):
+    context = super().get_context_data(**kwargs)
+    context['order'] = get_or_set_order_session(self.request)
+    context['order_items'] = context['order'].items.all()
+
+    print("context['order_items']:", context['order_items'])
+
+    for item in context['order_items']:
+        print(f'Product: {item.product.title}, Quantity: {item.quantity}, Color: {item.color}, Size: {item.size}, Price: {item.get_raw_total_item_price()}')
+    print('CART VIEW: ', context['order'], 'context : ', context)
+
+    # работа с промокодом
+
+    context['promo_code_form'] = PromocodeForm() 
+    context['discount'] = 0  # Изначально скидка 0
+    context['final_price'] = context['order'].get_total_order_price()
+
+    if self.request.method == 'POST':
+        promo_code_form = PromocodeForm(self.request.POST)
+        print('promo_code_form: ', promo_code_form)
+        if promo_code_form.is_valid():
+            code = promo_code_form.cleaned_data['code']
+            promo_code = self.get_valid_promo_code(code)
+            print('code: ', code, 'promo_code: ', promo_code)
+            if promo_code:
+                print('if promo_code')
+                context['discount'] = self.calculate_discount(promo_code, context['order'].get_total_price())
+                context['final_price'] -= context['discount'] 
+                print("context['final_price']", context['final_price'])
+
+    return context
+
+
+def get_valid_promo_code(self, code):
+    try:
+        promo_code = PromoCode.objects.get(code=code)
+        if promo_code.is_valid():
+            return promo_code
+    except PromoCode.DoesNotExist:
+        return None
+def calculate_discount(self, promo_code, total_price):
+    if promo_code.discount_type == 'fixed':
+        return min(promo_code.discount_value, total_price)  # Не превышаем общую сумму
+    elif promo_code.discount_type == 'percent':
+        return total_price * promo_code.discount_value / 100
+    return 0
+
+
+cart.py forms
+
+class PromocodeForm(forms.ModelForm):
+    code = forms.CharField(max_length=50, label='Промокод')
+    class Meta:
+        model = PromoCode
+        fields = ('code',)
+
+    def __init__(self, *args, **kwargs):
+        self.order = kwargs.pop('order', None)  # Передаём заказ в форму
+        super().__init__(*args, **kwargs)
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code')
+
+        print('PromocodeForm code: ', code)
+
+        try:
+            promo = PromoCode.objects.filter(code__iexact=code)
+            if promo.exists():
+                promo = promo.first()
+            else: 
+                raise forms.ValidationError("Промокод не найден.")      
+        except PromoCode.DoesNotExist:
+            raise forms.ValidationError("Промокод не найден.")    
+
+
+        
+        self.promo = promo  # Сохраняем для использования позже
+        return code
+
+
+
+        get_context_data, order:  order - 10 - admin - 15percent (15%)
+  
+
+
+        def post:  {'order': <Order: order - 10 - admin - 15percent (15%)>, 'order_items': <QuerySet [<OrderItem: 1 x Wool pants>]>, 'promo_code_form': <PromocodeForm bound=False, valid=Unknown, fields=(code)>, 'discount': 3150, 'final_price': 17850}
+        
+        PromocodeForm code:  15percent
+
+        get_total_order_price: > 0 , is not None 17850
+
+        form is valid: promo_code:  15percent (15%) order:  order - 10 - admin - 15percent (15%) 
+        context:  {'order': <Order: order - 10 - admin - 15percent (15%)>, 'order_items': <QuerySet [<OrderItem: 1 x Wool pants>]>, 'promo_code_form': <PromocodeForm bound=True, valid=True, fields=(code)>, 'discount': 3150, 'final_price': 17850}
+
+        MODEL- get_discount_amount - total:  21000 self.promo_code:  15percent (15%)
+
+        self.promo_code.discount_type == 'percent': -- 21000 self.promo_code.discount_value: 15
+        
+        percent:  3150
+
+        
+        if order_id is not None:
+        try: 
+        order, _ = Order.objects.get_or_create(id=order_id, ordered=False)
+        request.session['order_id'] = order.id
+
+    else:
+        order = Order.objects.create()
+        request.session['order_id'] = order.id
+
+    if request.user.is_authenticated and order.user is None:
+        order.user = request.user
+        order.save(update_fields=['user', ])

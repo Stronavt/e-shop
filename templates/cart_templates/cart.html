@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% load rubles_format %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+<div class="bg-white py-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 mb-0 ml-sm-n3 ml-md-n2 ml-lg-n2">
+                <a href="{% url 'home' %}">Home</a>
+                <span class="mx-2 mb-0">/</span>
+                <strong class="text-black">Cart</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="site-section">
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <div class="site-blocks-table">
+                {% if order_items %}
+
+
+
+
+                    <table>
+                        <thead class="table-cart">
+                            <tr>
+                                <th >Image</th>
+                                <th >Product</th>
+                                <th >Price</th>
+                                <th >Quantity</th>
+                                <th >Total</th>
+                                <th >Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td class="product-thumbnail text-center">
+                                    <img src="{{ item.product.image.url }}" class="img-fluid" style="max-width: 100px; max-height: 100px;">
+                                </td>
+                                <td class="product-name text-center">
+                                    <h2 class="h5 text-black">{{ item.product.title }}</h2>
+                                    <small>Size: {{ item.size.name }} </small>
+                                    <small>Color: {{ item.color.name }}</small>
+                                </td>
+                                <td class="text-center">{{ item.product.get_price|rubles_format }} ₽ </td>
+                                <td>
+                                    <div class="input-group mb-3" style="max-width: 120px;">
+                                        <div class="input-group-prepend">
+                                            <a href="{% url 'cart:decrease-quantity' item.id %}"
+                                                class="btn">
+                                                &minus;
+                                            </a>
+                                        </div>
+                                        <input type="text" class="form-control text-center" value="{{ item.quantity }}">
+                                        <div class="input-group-append">
+                                            <a href="{% url 'cart:increase-quantity' item.id %} "
+                                                class="btn">
+                                                &plus;
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {{ item.get_total_item_price|rubles_format }} ₽ 
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'cart:remove-item' item.id %}"
+                                        class="btn btn-sm">Delete</a>
+                                </td>
+                            </tr>
+
+
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    {% else %}
+                    <p>There are no items in your cart.
+                        <a href="{% url 'cart:product-list' %}">Continue shopping</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if order.items.count > 0 %}
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="row mb-5">
+                    <div class="col-md-12">
+                        <a class="btn  btn-sm btn-block"
+                            href="{% url 'cart:product-list' %}">Continue shopping</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 pl-5">
+                <div class="row justify-content-end">
+                    <div class="col-md-12">
+                        <div class="row">
+                            <div class="col-md-12 text-right border-bottom mb-5">
+                                <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <span class="text-black">Subtotal</span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <strong class="text-black">{{ order.get_raw_total_order_price|rubles_format }} ₽ </strong>
+                            </div>
+                        </div>
+
+                        
+                            
+
+                        <div class="row mb-3">
+                            {% if discount > 0 %}
+                            <div class="col-md-6">
+                                <span class="text-black">Discount:</span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <strong class="text-black">{{ discount }}₽</strong>
+                            </div>
+
+                            {% endif%}
+                        </div>                    
+                        <div class="row mb-5">
+                            <div class="col-md-6">
+                                <span class="text-black">Total</span>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <strong class="text-black">{{ order.get_total_order_price|rubles_format }} ₽ </strong>
+                            </div>
+                        </div>
+
+                        <div class="row mb-5">
+                            <div class="col-md-12 ml-auto text-right">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    {{ promo_code_form|crispy }}
+                                    <button type="submit" class="btn btn-secondary">Apply Promo Code</button>
+                                </form>       
+                            </div>
+                        </div>
+
+
+                        
+
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a class="btn btn-lg py-3 btn-block" href="{% url 'cart:checkout' %}">Proceed to checkout</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% include 'new_items.html' %}
+{% endblock content %}

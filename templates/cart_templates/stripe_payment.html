@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+
+.new-card-element {
+  display: inline-block;
+  width: 80px;
+  height: 80px;
+  margin-top: 56px;
+}
+
+</style>
+
+{% endblock extra_head %}
+
+{% block content %}
+
+<div class='container' style="margin: 70px auto;">
+    <div class='row justify-content-center'>
+        <div class="col-md-6">
+            <div id="loader" class="new-card-element" style="display: none;"></div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <select id="cardOptions" name="selectedCard" class="form-control">
+                        <option value="newCard">Use a new card</option>
+                        {% for card in payment_methods %}
+                            <option value="{{ card.pm_id }}">{{ card.brand }} - {{ card.exp_year }}/{{ card.exp_month }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="btn btn-primary btn-block mt-3">Pay</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

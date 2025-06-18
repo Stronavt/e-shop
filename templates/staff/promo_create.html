@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+
+{% block content %}
+
+<div class="site-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <a href="{% url 'staff:promo-list' %}">Go back to promocodes</a>
+                <hr />
+                <h4>Create promo </h4>
+                <form method="POST" enctype="multipart/form-data" style="width: 360px">
+                    {% csrf_token %}
+                    {{ form.media }}
+                    {{ form|crispy }}
+
+                    <button type="submit" class="btn btn-secondary">Create</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
