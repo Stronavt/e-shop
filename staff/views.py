@@ -13,7 +13,7 @@ from staff.mixins import StaffMixins
 class StaffPageView(LoginRequiredMixin, StaffMixins, generic.ListView):
     template_name = 'staff/staff.html'
     queryset = Order.objects.filter(ordered=False).order_by('-ordered_date')
-    print('StaffPageView queryset: ', queryset)
+
     paginated_by = 20
     context_object_name = 'orders'
 

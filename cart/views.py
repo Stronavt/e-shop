@@ -22,6 +22,7 @@ from .utils import get_or_set_order_session
 
 import json
 stripe.api_key = settings.STRIPE_SECRET_KEY
+#stripe.api_version = settings.STRIPE_API_VERSION
 
 class ProductListView(generic.ListView):
     template_name = 'cart_templates/product_list.html'
@@ -30,8 +31,6 @@ class ProductListView(generic.ListView):
     def get_queryset(self):
         queryset = Product.objects.all().order_by('-created')
         category = self.request.GET.get('category', None)
-        print('ProductListView, queryset : ', queryset)
-
 
         if not category:
             return queryset
@@ -41,11 +40,9 @@ class ProductListView(generic.ListView):
         ).distinct()
 
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({'categories': Category.objects.values('name')})
-        #print('ProductListView, get_context: ', context)
         return context
 
 
@@ -63,37 +60,24 @@ class ProductDetailView(generic.FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['product_id'] = self.get_object().id
-        print('kwargs from cart view get_form_kwargs: ', kwargs)
+
         return kwargs
 
     def form_valid(self, form):
         order = get_or_set_order_session(self.request)
         product = self.get_object()
 
-        print('Form cleaned data:', form.cleaned_data)
-        #print('product!!! -', product)
         item_filter = order.items.filter(product=product, color = form.cleaned_data['color'], size = form.cleaned_data['size'])
-
-        print('item_filter ---', item_filter)
-            # Отладочные выводы 
-        print('Product.title:', product)
-        print('Color:', form.cleaned_data['color'])
-        print('Size:', form.cleaned_data['size'])
-        print('product.primary_categories: ', product.primary_categories)
-        
-        print('Form cleaned data after:', form.cleaned_data)
 
         if not item_filter.exists():
             new_item = form.save(commit=False)
             new_item.product = product
             new_item.order = order
             new_item.save()
-            print('new_item.save: ', new_item)
         else:
             item = item_filter.first()
             item.quantity += int(form.cleaned_data['quantity'])
             item.save()
-            print('item: ', item)
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -106,8 +90,12 @@ class IncreaseQuantityView(generic.View):
     @staticmethod
     def get(request, *args, **kwargs):
         order_item = get_object_or_404(OrderItem, id=kwargs['pk'])
-        order_item.quantity += 1
-        order_item.save(update_fields = ['quantity', ])
+        if order_item.quantity < order_item.product.stock:
+            order_item.quantity += 1
+            order_item.save(update_fields=['quantity'])
+        else:
+            messages.info(request, 'Доступное количество товара достигнуто')  
+         
         return redirect('cart:cart_page')
     
 
@@ -138,14 +126,12 @@ class CartView(generic.View):
         context = self.get_context_data()
         context['order'].promo_code = None
         context['order'].save()
-        print('CartView DEF GET context : ', context )
         return render(request, self.template_name, context)
     
     def post(self, request):
         context = self.get_context_data()
         form = PromoCodeForm(request.POST, order=context['order'])
 
-        print('def post: ', context)
         if form.is_valid():
             promo_code = form.promo  # Полученный из формы промокод
             order = context['order']
@@ -154,17 +140,13 @@ class CartView(generic.View):
             context['discount'] = order.get_discount_amount()
             context['final_price'] = order.get_order_price_with_discount()
             context['promo_code_form'] = form
-
-            print('form is valid: promo_code: ',promo_code, 'order: ', order, 'context: ', context )
         else:
             context['promo_code_form'] = form
-            print('not valid context: ', context)
         return render(request, self.template_name, context)
     
     def get_context_data(self):
         order = get_or_set_order_session(self.request)
 
-        print('get_context_data, order: ', order)
         return {
             "order": order,
             "order_items": order.items.all(),
@@ -215,7 +197,6 @@ class CheckoutView(generic.FormView):
     def get_context_data(self, **kwargs):
         context = super(CheckoutView, self).get_context_data(**kwargs)
         context["order"] = get_or_set_order_session(self.request)
-        print('CHECKOUT context:', context, 'context order: ', context['order'])
         return context
 
 
@@ -241,7 +222,6 @@ class ThankYouView(generic.TemplateView):
 class OrderDetailView(LoginRequiredMixin, generic.DetailView):
     template_name: str = 'order.html'
     queryset = Order.objects.all()
-    print('queryset: OrderDetailView', queryset)
     context_object_name: str = 'order'
 
 
@@ -262,7 +242,6 @@ class ConfirmOrderView(generic.View):
 
         order.ordered = True
         order.ordered_date = timezone.now()
-        #order.ordered_date = datetime.date.today()
         order.save(update_fields=['ordered', 'ordered_date', ])
 
         return JsonResponse({"data": "Success"})
@@ -272,8 +251,7 @@ class ConfirmOrderView(generic.View):
         return JsonResponse({"data": "This endpoint only accepts POST requests."}, status=405)
     
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
-stripe.api_version = settings.STRIPE_API_VERSION
+
 
 
 def payment_process(request):
@@ -284,15 +262,13 @@ def payment_process(request):
         success_url = request.build_absolute_uri(
                         reverse('cart:thanks'))
 
-        # Stripe checkout session data
         session_data = {
             'mode': 'payment',
             'client_reference_id': order.id,
             'success_url': success_url,
             'line_items': []
         }
-        print('session data: ', session_data)
-        # add order items to the Stripe checkout session
+
         order.ordered = True
         order.ordered_date = timezone.now()
         order.save(update_fields=['ordered', 'ordered_date', ])

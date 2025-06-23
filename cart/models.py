@@ -71,8 +71,6 @@ class Product(models.Model):
         return reverse('staff:product-delete', kwargs={'pk':self.pk})
 
     def get_price(self):
-        #print('get_price: ', '{:.2f}'.format(self.price/100))
-
         return self.price
 
 
@@ -129,7 +127,6 @@ class Address(models.Model):
     postcode = models.CharField(max_length=10, validators=[
         RegexValidator(regex='^\d+$', message='Postcode must be numeric')])
     address_1 = models.CharField(max_length=150)
-    address_2 = models.CharField(max_length=150)
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
@@ -156,30 +153,18 @@ class Order(models.Model):
         total = sum(item.get_raw_total_item_price() for item in self.items.all())
         return total
 
-    #не работает метод
     def get_discount_amount(self):
         if not self.promo_code or not self.promo_code.is_valid():
             return 0
         total = self.get_raw_total_order_price()
-        print('MODEL- get_discount_amount - total: ', total, 'self.promo_code: ', self.promo_code )
 
         if total < self.promo_code.minimum_order_amount:
             return 0
         if self.promo_code.discount_type == 'fixed':
-
-            print(print("self.promo_code.discount_type == 'fixed': --", total, 'self.promo_code.discount_value:', self.promo_code.discount_value ))
-
-            print('fixed: ', min(self.promo_code.discount_value, total))
             return min(self.promo_code.discount_value, total)
         
         elif self.promo_code.discount_type == 'percent':
-
-            print("self.promo_code.discount_type == 'percent': --", total, 'self.promo_code.discount_value:', self.promo_code.discount_value )
-
-            print('percent: ', total * self.promo_code.discount_value // 100)
-            return total * self.promo_code.discount_value // 100
-        else:
-            print('self.promo_code and self.promo_code NOT VALID!')    
+            return total * self.promo_code.discount_value // 10
 
 
     def get_order_price_with_discount(self) -> str:
@@ -188,10 +173,8 @@ class Order(models.Model):
 
 
         if discount is None or discount == 0:
-            #print('get_total_order_price - discount is None: ', total)
             return total
         else:   
-            print('get_total_order_price: > 0 , is not None', max(total - discount, 0))
             return max(total - discount, 0)
 
     def get_total_order_price(self):
@@ -210,14 +193,9 @@ class OrderItem(models.Model):
         return f'{self.quantity} x {self.product.title}'
 
     def get_raw_total_item_price(self) -> float:
-        #print('get_raw_total_item_price: ', self.quantity * self.product.price)
-        #print('get_raw_total_item_price', self.quantity * self.product.price)
         return self.quantity * self.product.price
 
     def get_total_item_price(self) -> str:
-        #print('get_total_item_price', "{:.2f}".format(self.get_raw_total_item_price()))
-        #return "{:.2f}".format(self.get_raw_total_item_price())
-        #return '{:.0f}'.format(self.get_raw_total_item_price())
         return self.get_raw_total_item_price()
     
 

@@ -16,8 +16,6 @@ urlpatterns = [
     path('payment/', views.PaymentView.as_view(),  name='payment'),
     path('confirm-order/', view=views.ConfirmOrderView.as_view(), name='confirm-order'),
     path('payment/stripe/', views.payment_process, name='payment-stripe'),    
-    #path('payment/stripe/', view=views.StripePaymentView.as_view(), name='payment-stripe'),
-    #path('webhooks/stripe/', views.stripe_webhook_view, name='stripe-webhook'),
 
 ]
 app_name='cart'

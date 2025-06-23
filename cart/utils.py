@@ -3,7 +3,6 @@ from .models import Order
 
 def get_or_set_order_session(request):
     order_id = request.session.get('order_id', None)
-    print('ORDER_ID: ', order_id)
 
     if order_id is not None:
         try: 
