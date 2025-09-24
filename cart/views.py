@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from django.utils import timezone
 from decimal import Decimal
 from venv import logger
@@ -6,7 +6,7 @@ from venv import logger
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
@@ -23,6 +23,8 @@ from .utils import get_or_set_order_session
 import json
 from django.contrib.auth.decorators import login_required
 stripe.api_key = settings.STRIPE_SECRET_KEY
+from django.core.signing import Signer
+
 #stripe.api_version = settings.STRIPE_API_VERSION
 
 class ProductListView(generic.ListView):
@@ -134,7 +136,7 @@ class CartView(generic.View):
         form = PromoCodeForm(request.POST, order=context['order'])
 
         if form.is_valid():
-            promo_code = form.promo  
+            promo_code = form.promo  # Полученный из формы промокод
             order = context['order']
             order.promo_code = promo_code
             order.save()
@@ -160,7 +162,7 @@ class CartView(generic.View):
     
 
 
-class CheckoutView(generic.FormView, LoginRequiredMixin):
+class CheckoutView(generic.FormView):
     template_name = 'cart_templates/checkout.html'
     form_class = AddressForm
 
@@ -185,28 +187,28 @@ class CheckoutView(generic.FormView, LoginRequiredMixin):
             )
             order.shipping_address = address
 
+
         order.save()
         messages.info(self.request, "You have successfully added your addresses")
         return super(CheckoutView, self).form_valid(form)
 
     def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
+        kwargs = super(CheckoutView, self).get_form_kwargs()
         if self.request.user.is_authenticated:
             try:
-                # Проверяем существование перед передачей
                 user = self.request.user.__class__.objects.get(id=self.request.user.id, is_active=True)
                 kwargs["user_id"] = user.id
             except self.request.user.__class__.DoesNotExist:
                 logger.error(f"User  {self.request.user.id} not found in get_form_kwargs")
-                # Fallback: Не передаём или используем None
-                kwargs["user_id"] = None  # Форма должна handle None
-                # Или raise Http404("User  invalid")
+                kwargs["user_id"] = None  
+
         else:
             kwargs["user_id"] = None
         return kwargs
 
+
     def get_context_data(self, **kwargs):
-        context = super().get_context_data()
+        context = super(CheckoutView, self).get_context_data(**kwargs)
         context["order"] = get_or_set_order_session(self.request)
         return context
 
@@ -230,7 +232,7 @@ class ThankYouView(generic.TemplateView):
     template_name: str = 'cart_templates/thanks.html'
 
 
-# страница заказа
+#страница заказа
 class OrderDetailView(LoginRequiredMixin, generic.DetailView):
     template_name: str = 'order.html'
     queryset = Order.objects.all()
@@ -263,51 +265,54 @@ class ConfirmOrderView(generic.View):
         return JsonResponse({"data": "This endpoint only accepts POST requests."}, status=405)
     
 
+
+
 @login_required
 def payment_process(request):
-    order = get_or_set_order_session(request)
+    order_id = request.session.get('order_signed_id', None)
 
-    if order.ordered:
-        messages.error(request, "Этот заказ уже обработан.")
-        logger.warning(f"Attempt to process already ordered order {order.id}")
+    if order_id is None:
         return redirect('cart:cart')
-
-    if not request.user.is_authenticated:
-        if order.start_date < timezone.now() - timedelta(hours=24):  # Дублируем проверку, если нужно
-            messages.warning(request, "Сессия истекла. Пожалуйста, войдите в аккаунт.")
-            return redirect('%s?next=%s' % (reverse('account:login'), request.path))
-
-    if order.user and order.user != request.user:
-        
-        messages.error(request, "Доступ запрещён.")
-        logger.warning(f"Unauthorized access to order {order.id} by user {request.user.id}")
-        raise Http404("Order not found")
-    
-
-    if order.items.count() == 0:  
-        messages.error(request, "Корзина пуста.")
+    signer = Signer()
+    try:
+        order_id = int(signer.unsign(order_id))
+        order = get_object_or_404(Order, id=order_id, ordered=False)
+    except (Signer.BadSignature, ValueError):
+        logger.warning("Invalid signed_id in payment")
         return redirect('cart:cart')
-    
-   
+    order = get_object_or_404(Order, id=order_id)
+
     if request.method == 'POST':
-        
+        success_url = request.build_absolute_uri(
+                        reverse('cart:thanks'))
+
+        session_data = {
+            'mode': 'payment',
+            'client_reference_id': order.id,
+            'success_url': success_url,
+            'line_items': []
+        }
+
         order.ordered = True
         order.ordered_date = timezone.now()
-        order.save(update_fields=['ordered', 'ordered_date'])
-        
-       
-        if 'order_signed_id' in request.session:
-            del request.session['order_signed_id']
-        
-        success_url = request.build_absolute_uri(reverse('cart:thanks'))
+        order.save(update_fields=['ordered', 'ordered_date', ])
 
-        return redirect(success_url) 
-    
 
-    context = {
-        'order': order,
-        'total': order.get_total(),  
-    }
-    return render(request, 'cart_templates/stripe_payment.html', context)
+        for item in order.items.all():
+            session_data['line_items'].append({
+                'price_data': {
+                    'unit_amount': int(item.order.get_total_order_price()* Decimal(100)),
+                    'currency': 'rub',
+                    'product_data': {
+                        'name': item.product.title,
+                    },
+                },
+                'quantity': item.quantity,
+            })
 
-    
+        session = stripe.checkout.Session.create(**session_data)
+
+        return redirect(session.url, code=303)
+
+    else:
+        return render(request, 'cart_templates/stripe_payment.html', locals())
