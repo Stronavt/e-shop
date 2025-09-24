@@ -49,14 +49,12 @@
 
     closeButtons.forEach(button => {
     button.addEventListener('click', (event) => {
-      // Find the closest parent with class 'alert'
+     
       const alertElement = button.closest('.alert');
       if (alertElement) {
-        // Option 1: Remove alert from the DOM
+        
         alertElement.remove();
-        // Option 2 (alternative): Hide alert by removing 'show' class with fade out effect
-        // alertElement.classList.remove('show');
-        // setTimeout(() => alertElement.remove(), 150); // Allow fade animation to complete
+        
       }
     });
   });
