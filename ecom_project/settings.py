@@ -157,3 +157,33 @@ LOGIN_REDIRECT_URL = '/profile'
 STRIPE_PUBLISHABLE_KEY = os.environ['STRIPE_PUBLISHABLE_KEY']
 STRIPE_SECRET_KEY = os.environ['STRIPE_SECRET_KEY']
 STRIPE_API_VERSION = os.environ['STRIPE_API_VERSION']
+
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 86400
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+LOGGING = {
+         'version': 1,
+         'disable_existing_loggers': False,
+         'handlers': {
+             'console': {
+                 'class': 'logging.StreamHandler',
+             },
+             'file': { 
+                 'class': 'logging.FileHandler',
+                 'filename': 'debug.log',
+             },
+         },
+         'loggers': {
+             'cart': {  
+                 'handlers': ['console'],  
+                 'level': 'INFO',  
+                 'propagate': True,
+             },
+         },
+     }
+     
+

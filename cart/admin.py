@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from cart.models import Product, Order, OrderItem, Category, SizeVariation, ColorVariation , PromoCode, Address
 
-#from ecom_project.cart.models import SizeVariation, ColorVariation , PromoCode, Address
 
 
 @admin.register(Product)

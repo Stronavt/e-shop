@@ -24,7 +24,8 @@
             <div class="col-md-12">
                 <div class="border p-4 rounded" role="alert">
                     You are nearly finished with your order.
-                    To finalize your order, please <a>Login</a> or <a>Signup</a>
+                    To finalize your order, please <a href="{% url 'account_login' %}">Login</a> or 
+                    <a href="{% url 'account_signup' %}">Signup</a>
                 </div>
                 <div class="progress">
                     <div class="progress-bar" role="progressbar" style="width: 90%;" aria-valuenow="90"

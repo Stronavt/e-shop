@@ -133,11 +133,10 @@ a:hover {
   font-size: 1em;
 }
 
-  .icon {
+.icon {
     width: 20px;
     height: 20px;
-    /* Опционально для сохранения пропорций */
-    object-fit: contain; /* или cover */
+    object-fit: contain;
   }
   .fullscreen-img {
     width: 100vw;

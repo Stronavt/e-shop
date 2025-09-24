@@ -1,3 +1,4 @@
+import logging
 from datetime import timezone
 from django import forms
 
@@ -6,7 +7,7 @@ from django.contrib.auth import get_user_model
 
 from .models import Product, PromoCode, SizeVariation, ColorVariation, OrderItem, Address
 User = get_user_model()
-
+logger = logging.getLogger(__name__)
 
 class CartForm(forms.ModelForm):
     size = forms.ModelChoiceField(queryset=SizeVariation.objects.none(), required=False)
@@ -64,13 +65,26 @@ class AddressForm(forms.Form):
     selected_shipping_address = forms.ModelChoiceField(queryset=Address.objects.none(), required=False)
 
     def __init__(self, *args, **kwargs):
-        user_id = kwargs.pop('user_id')
+        user_id = kwargs.pop('user_id', None)
         super().__init__(*args, **kwargs)
 
-        user = User.objects.get(id=user_id)
-        shipping_address_queryset = Address.objects.filter(user=user)
+        user = None
+        shipping_address_queryset =  Address.objects.none()
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id, is_active=True)
+                shipping_address_queryset = Address.objects.filter(user=user)
+            except User.DoesNotExist:
+                logger.warning(f"User  {user_id} not found or inactive in AddressForm")
+                user = None
+                shipping_address_queryset =  Address.objects.none()  
 
-        self.fields['selected_shipping_address'].queryset = shipping_address_queryset
+        if 'selected_shipping_address' in self.fields:
+            self.fields['selected_shipping_address'].queryset = shipping_address_queryset
+
+            if not shipping_address_queryset.exists():
+                self.fields['selected_shipping_address'].initial = None
+
 
     def clean(self):
         data = self.cleaned_data
@@ -97,7 +111,6 @@ class PromoCodeForm(forms.Form):
 
 
     def __init__(self, *args, **kwargs):
-        # передаем заказ в форму
         self.order = kwargs.pop('order', None)
         super().__init__(*args, **kwargs)
 
@@ -108,7 +121,7 @@ class PromoCodeForm(forms.Form):
             raise forms.ValidationError("Промокод не найден или не действителен.")
 
         
-        self.promo = promo  # Сохраняем для использования позже
+        self.promo = promo  
         return code
 
 

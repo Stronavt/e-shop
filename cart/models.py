@@ -130,7 +130,7 @@ class Address(models.Model):
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return ', '.join([self.address_1, self.address_2, self.city, self.country])
+        return ', '.join([self.address_1, self.city, self.country])
 
 
 class Order(models.Model):

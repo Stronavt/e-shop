@@ -46,7 +46,7 @@
             <li class="nav-item ">
                 <a href="{% url 'cart:cart_page' %}" class="nav-link">
 
-                    <img src="/media/icons/корзина.png" alt="Корзина" class="icon">
+                    <img src="/media/icons/корзина.png" alt="Корзина" class="icon" style="max-width: 20px; max-height: 20px;">
                     {{ request|cart_items_count }}
                 </a>
             </li>   
